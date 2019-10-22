@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
+import * as halson from 'halson'
 import * as _ from 'lodash'
 import Order from '../models/order'
 import { OrderStatus } from '../models/orderStatus'
@@ -8,27 +9,36 @@ let orders: Array<Order> = []
 
 export let getOrder = (req: Request, res: Response, next: NextFunction) => {
   const id = req.params.id
-  const order = orders.find(obj => obj.id === Number(id))
+  let order = orders.find(obj => obj.id === Number(id))
   const httpStatusCode = order ? 200 : 404
+  if (order) {
+    order = halson(order).addLink('self', `/store/orders/${order.id}`)
+  }
   return formatOutput(res, order, httpStatusCode, 'order')
 }
 
 export let getAllOrders = (req: Request, res: Response, next: NextFunction) => {
   const limit = req.query.limit || orders.length
   const offset = req.query.offset || 0
-  const filteredOrders = res.status(200).send(
-    _(orders)
-      .drop(offset)
-      .take(limit)
-      .value()
-  )
+  let filteredOrders = _(orders)
+    .drop(offset)
+    .take(limit)
+    .value()
+
+  filteredOrders = filteredOrders.map(order => {
+    return halson(order)
+      .addLink('self', `/store/orders/${order.id}`)
+      .addLink('user', {
+        href: `/users/${order.userId}`,
+      })
+  })
 
   return formatOutput(res, filteredOrders, 200, 'order')
 }
 
 export let addOrder = (req: Request, res: Response, next: NextFunction) => {
   /* tslint:disable:object-literal-sort-keys */
-  const order: Order = {
+  let order: Order = {
     // generic random value from 1 to 100 only for tests so far
     id: Math.floor(Math.random() * 100) + 1,
     userId: req.body.userId,
@@ -39,6 +49,11 @@ export let addOrder = (req: Request, res: Response, next: NextFunction) => {
   }
   /* tslint:enable:object-literal-sort-keys */
   orders.push(order)
+  order = halson(order)
+    .addLink('self', `/store/orders/${order.id}`)
+    .addLink('user', {
+      href: `/users/${order.userId}`,
+    })
   return formatOutput(res, order, 201, 'order')
 }
 

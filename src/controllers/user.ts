@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
+import * as halson from 'halson'
 import User from '../models/user'
 import { formatOutput } from '../utility/orderApiUtility'
 
@@ -6,14 +7,17 @@ let users: Array<User> = []
 
 export let getUser = (req: Request, res: Response, next: NextFunction) => {
   const username = req.params.username
-  const user = users.find(obj => obj.username === username)
+  let user = users.find(obj => obj.username === username)
   const httpStatusCode = user ? 200 : 404
+  if (user) {
+    user = halson(user).addLink('self', `/users/${user.id}`)
+  }
   return formatOutput(res, user, httpStatusCode, 'user')
 }
 
 export let addUser = (req: Request, res: Response, next: NextFunction) => {
   /* tslint:disable:object-literal-sort-keys */
-  const user: User = {
+  let user: User = {
     // generic random value from 1 to 100 only for tests so far
     id: Math.floor(Math.random() * 100) + 1,
     username: req.body.username,
@@ -26,6 +30,7 @@ export let addUser = (req: Request, res: Response, next: NextFunction) => {
   }
   /* tslint:enable:object-literal-sort-keys */
   users.push(user)
+  user = halson(user).addLink('self', `/users/${user.id}`)
   return formatOutput(res, user, 201, 'user')
 }
 
