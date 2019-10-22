@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
 import * as _ from 'lodash'
-import { ApplicationType } from '../models/applicationType'
 import Order from '../models/order'
 import { OrderStatus } from '../models/orderStatus'
 import { formatOutput } from '../utility/orderApiUtility'
@@ -11,7 +10,7 @@ export let getOrder = (req: Request, res: Response, next: NextFunction) => {
   const id = req.params.id
   const order = orders.find(obj => obj.id === Number(id))
   const httpStatusCode = order ? 200 : 404
-  return formatOutput(res, order, httpStatusCode, ApplicationType.JSON)
+  return formatOutput(res, order, httpStatusCode, 'order')
 }
 
 export let getAllOrders = (req: Request, res: Response, next: NextFunction) => {
@@ -24,7 +23,7 @@ export let getAllOrders = (req: Request, res: Response, next: NextFunction) => {
       .value()
   )
 
-  return formatOutput(res, filteredOrders, 200, ApplicationType.JSON)
+  return formatOutput(res, filteredOrders, 200, 'order')
 }
 
 export let addOrder = (req: Request, res: Response, next: NextFunction) => {
@@ -40,7 +39,7 @@ export let addOrder = (req: Request, res: Response, next: NextFunction) => {
   }
   /* tslint:enable:object-literal-sort-keys */
   orders.push(order)
-  return formatOutput(res, order, 201, ApplicationType.JSON)
+  return formatOutput(res, order, 201, 'order')
 }
 
 export let removeOrder = (req: Request, res: Response, next: NextFunction) => {
@@ -63,5 +62,5 @@ export let getInventory = (req: Request, res: Response, next: NextFunction) => {
     inventoryOrders = inventoryOrders.filter(item => item.status === status)
   }
   const grouppedOrders = _.groupBy(inventoryOrders, 'userId')
-  return formatOutput(res, grouppedOrders, 200, ApplicationType.JSON)
+  return formatOutput(res, grouppedOrders, 200, 'inventory')
 }

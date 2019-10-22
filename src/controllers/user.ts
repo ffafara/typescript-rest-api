@@ -1,5 +1,4 @@
 import { NextFunction, Request, Response } from 'express'
-import { ApplicationType } from '../models/applicationType'
 import User from '../models/user'
 import { formatOutput } from '../utility/orderApiUtility'
 
@@ -9,7 +8,7 @@ export let getUser = (req: Request, res: Response, next: NextFunction) => {
   const username = req.params.username
   const user = users.find(obj => obj.username === username)
   const httpStatusCode = user ? 200 : 404
-  return formatOutput(res, user, httpStatusCode, ApplicationType.JSON)
+  return formatOutput(res, user, httpStatusCode, 'user')
 }
 
 export let addUser = (req: Request, res: Response, next: NextFunction) => {
@@ -27,7 +26,7 @@ export let addUser = (req: Request, res: Response, next: NextFunction) => {
   }
   /* tslint:enable:object-literal-sort-keys */
   users.push(user)
-  return formatOutput(res, user, 201, ApplicationType.JSON)
+  return formatOutput(res, user, 201, 'user')
 }
 
 export let updateUser = (req: Request, res: Response, next: NextFunction) => {
@@ -48,7 +47,7 @@ export let updateUser = (req: Request, res: Response, next: NextFunction) => {
   user.userStatus = req.body.userStatus || user.userStatus
 
   users[userIndex] = user
-  return formatOutput(res, {}, 204, ApplicationType.JSON)
+  return formatOutput(res, {}, 204)
 }
 
 export let removeUser = (req: Request, res: Response, next: NextFunction) => {
@@ -61,5 +60,5 @@ export let removeUser = (req: Request, res: Response, next: NextFunction) => {
 
   users = users.filter(item => item.username !== username)
 
-  return formatOutput(res, {}, 204, ApplicationType.JSON)
+  return formatOutput(res, {}, 204)
 }
