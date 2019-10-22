@@ -22,7 +22,7 @@ const order: Order = {
   complete: false,
 }
 
-describe('userRoute', () => {
+describe('orderRoute', () => {
   it('should respond with HTTP 404 status because there is no order', async () => {
     return chai
       .request(app)
@@ -51,6 +51,15 @@ describe('userRoute', () => {
         expect(res.status).to.be.equal(200)
         expect(res.body.id).to.be.equal(order.id)
         expect(res.body.status).to.be.equal(order.status)
+      })
+  })
+  it('should return all orders so far', async () => {
+    return chai
+      .request(app)
+      .get(`/store/orders`)
+      .then(res => {
+        expect(res.status).to.be.equal(200)
+        expect(res.body.length).to.be.equal(1)
       })
   })
   it('should return the inventory for all users', async () => {

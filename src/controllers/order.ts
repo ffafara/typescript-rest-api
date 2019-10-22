@@ -12,6 +12,10 @@ export let getOrder = (req: Request, res: Response, next: NextFunction) => {
   return res.status(httpStatusCode).send(order)
 }
 
+export let getAllOrders = (req: Request, res: Response, next: NextFunction) => {
+  return res.status(200).send(orders)
+}
+
 export let addOrder = (req: Request, res: Response, next: NextFunction) => {
   /* tslint:disable:object-literal-sort-keys */
   const order: Order = {
@@ -42,6 +46,11 @@ export let removeOrder = (req: Request, res: Response, next: NextFunction) => {
 }
 
 export let getInventory = (req: Request, res: Response, next: NextFunction) => {
-  const grouppedOrders = _.groupBy(orders, 'userId')
+  const status = req.query.status
+  let inventoryOrders = orders
+  if (status) {
+    inventoryOrders = inventoryOrders.filter(item => item.status === status)
+  }
+  const grouppedOrders = _.groupBy(inventoryOrders, 'userId')
   return res.status(200).send(grouppedOrders)
 }
