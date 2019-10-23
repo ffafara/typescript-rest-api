@@ -24,6 +24,8 @@ const user = {
 }
 
 describe('userRoute', () => {
+  let token
+
   before(async () => {
     expect(UserModel.modelName).to.be.equal('User')
     await UserModel.collection.drop()
@@ -34,10 +36,21 @@ describe('userRoute', () => {
     })
   })
 
+  it('should be able to login', () => {
+    return chai
+      .request(app)
+      .get(`/users/login?username=${user.username}&password=${user.password}`)
+      .then(res => {
+        expect(res.status).to.be.equal(200)
+        token = res.body.token
+      })
+  })
+
   it('should respond with HTTP 404 status because there is no user', async () => {
     return chai
       .request(app)
       .get(`/users/no_such_user`)
+      .set('Authorization', `Bearer ${token}`)
       .then(res => {
         expect(res.status).to.be.equal(404)
       })
@@ -46,6 +59,7 @@ describe('userRoute', () => {
     return chai
       .request(app)
       .post('/users/')
+      .set('Authorization', `Bearer ${token}`)
       .send(user)
       .then(res => {
         expect(res.status).to.be.equal(201)
@@ -56,11 +70,13 @@ describe('userRoute', () => {
     return chai
       .request(app)
       .get(`/users/${user.username}`)
+      .set('Authorization', `Bearer ${token}`)
       .then(res => {
         expect(res.status).to.be.equal(200)
         expect(res.body.username).to.be.equal(user.username)
       })
   })
+
   it('should update the user John', async () => {
     user.username = 'John Updated'
     user.firstName = 'John Updated'
@@ -73,6 +89,7 @@ describe('userRoute', () => {
     return chai
       .request(app)
       .patch(`/users/John`)
+      .set('Authorization', `Bearer ${token}`)
       .send(user)
       .then(res => {
         expect(res.status).to.be.equal(204)
@@ -82,6 +99,7 @@ describe('userRoute', () => {
     return chai
       .request(app)
       .get(`/users/${user.username}`)
+      .set('Authorization', `Bearer ${token}`)
       .then(res => {
         expect(res.status).to.be.equal(200)
         expect(res.body.username).to.be.equal(user.username)
@@ -99,6 +117,7 @@ describe('userRoute', () => {
     return chai
       .request(app)
       .patch(`/users/Mary`)
+      .set('Authorization', `Bearer ${token}`)
       .send(user)
       .then(res => {
         expect(res.status).to.be.equal(404)
@@ -108,6 +127,7 @@ describe('userRoute', () => {
     return chai
       .request(app)
       .del(`/users/${user.username}`)
+      .set('Authorization', `Bearer ${token}`)
       .then(res => {
         expect(res.status).to.be.equal(204)
       })
@@ -116,6 +136,7 @@ describe('userRoute', () => {
     return chai
       .request(app)
       .del(`/users/Mary`)
+      .set('Authorization', `Bearer ${token}`)
       .then(res => {
         expect(res.status).to.be.equal(404)
       })

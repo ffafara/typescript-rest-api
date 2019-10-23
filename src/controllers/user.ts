@@ -1,6 +1,7 @@
 import * as bcrypt from 'bcrypt'
 import { NextFunction, Request, Response } from 'express'
 import * as halson from 'halson'
+import * as jwt from 'jsonwebtoken'
 import { UserModel } from '../schemas/user'
 import { formatOutput } from '../utility/orderApiUtility'
 
@@ -62,4 +63,24 @@ export let removeUser = (req: Request, res: Response, next: NextFunction) => {
       res.status(204).send()
     })
   })
+}
+
+export let login = async (req: Request, res: Response, next: NextFunction) => {
+  const username = req.query.username
+  const password = req.query.password
+
+  const user = await UserModel.findOne({ username: username })
+  if (!user) {
+    return res.status(404).send()
+  }
+
+  const validate = bcrypt.compareSync(password, user.password.valueOf())
+  if (validate) {
+    const body = { _id: user._id, email: user.email }
+    const token = jwt.sign({ user: body }, 'top_secret')
+
+    return res.json({ token: token })
+  } else {
+    return res.status(401).send()
+  }
 }
