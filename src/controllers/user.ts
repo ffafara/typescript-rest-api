@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt'
 import { NextFunction, Request, Response } from 'express'
 import * as halson from 'halson'
 import { UserModel } from '../schemas/user'
@@ -20,6 +21,7 @@ export let getUser = (req: Request, res: Response, next: NextFunction) => {
 
 export let addUser = (req: Request, res: Response, next: NextFunction) => {
   const newUser = new UserModel(req.body)
+  newUser.password = bcrypt.hashSync(newUser.password, 10)
 
   newUser.save((err, user) => {
     user = halson(user.toJSON()).addLink('self', `/users/${user._id}`)

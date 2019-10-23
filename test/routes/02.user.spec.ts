@@ -1,5 +1,6 @@
 'use strict'
 
+import * as bcrypt from 'bcrypt'
 import * as chai from 'chai'
 import chaiHttp = require('chai-http')
 import 'mocha'
@@ -12,6 +13,7 @@ const expect = chai.expect
 
 /* tslint:disable:object-literal-sort-keys */
 const user = {
+  _id: null,
   username: 'John',
   firstName: 'John',
   lastName: 'Doe',
@@ -24,13 +26,18 @@ const user = {
 describe('userRoute', () => {
   before(async () => {
     expect(UserModel.modelName).to.be.equal('User')
-    UserModel.collection.drop()
+    await UserModel.collection.drop()
+    const newUser = new UserModel(user)
+    newUser.password = bcrypt.hashSync(newUser.password, 10)
+    return await newUser.save((error, userCreated) => {
+      user._id = userCreated._id
+    })
   })
 
   it('should respond with HTTP 404 status because there is no user', async () => {
     return chai
       .request(app)
-      .get(`/users/${user.username}`)
+      .get(`/users/no_such_user`)
       .then(res => {
         expect(res.status).to.be.equal(404)
       })
