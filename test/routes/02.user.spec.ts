@@ -26,14 +26,19 @@ const user = {
 describe('userRoute', () => {
   let token
 
-  before(async () => {
+  before(done => {
     expect(UserModel.modelName).to.be.equal('User')
-    await UserModel.collection.drop()
-    const newUser = new UserModel(user)
-    newUser.password = bcrypt.hashSync(newUser.password, 10)
-    return await newUser.save((error, userCreated) => {
-      user._id = userCreated._id
-    })
+    UserModel.collection
+      .drop()
+      .then(() => {
+        const newUser = new UserModel(user)
+        newUser.password = bcrypt.hashSync(newUser.password, 10)
+        newUser.save((error, userCreated) => {
+          user._id = userCreated._id
+          done()
+        })
+      })
+      .catch(error => done())
   })
 
   it('should be able to login', () => {
@@ -60,6 +65,7 @@ describe('userRoute', () => {
       })
   })
   it('should create a new user and retrieve it back', async () => {
+    user.email = 'unique_email@email.com'
     return chai
       .request(app)
       .post('/users/')

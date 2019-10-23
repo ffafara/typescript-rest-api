@@ -1,6 +1,7 @@
 import * as bodyParser from 'body-parser'
 import * as express from 'express'
 import * as mongoose from 'mongoose'
+import * as errorHandler from '../src/utility/errorHandler'
 import { APIRoute } from './routes/api'
 import { OrderRoute } from './routes/order'
 import { UserRoute } from './routes/user'
@@ -19,6 +20,9 @@ class App {
     this.userRoutes.routes(this.app)
     this.orderRoutes.routes(this.app)
     this.mongoSetup()
+    this.app.use(errorHandler.logging)
+    this.app.use(errorHandler.clientErrorHandler)
+    this.app.use(errorHandler.errorHandler)
   }
 
   private mongoSetup(): void {
