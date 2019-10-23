@@ -1,33 +1,39 @@
 import { NextFunction, Request, Response } from 'express'
 import * as halson from 'halson'
 import * as _ from 'lodash'
-import Order from '../models/order'
 import { OrderStatus } from '../models/orderStatus'
+import { OrderModel } from '../schemas/order'
+import { UserModel } from '../schemas/user'
 import { formatOutput } from '../utility/orderApiUtility'
-
-let orders: Array<Order> = []
 
 export let getOrder = (req: Request, res: Response, next: NextFunction) => {
   const id = req.params.id
-  let order = orders.find(obj => obj.id === Number(id))
-  const httpStatusCode = order ? 200 : 404
-  if (order) {
-    order = halson(order).addLink('self', `/store/orders/${order.id}`)
-  }
-  return formatOutput(res, order, httpStatusCode, 'order')
+
+  OrderModel.findById(id, (err, order) => {
+    if (!order) {
+      return res.status(404).send()
+    }
+    order = halson(order.toJSON()).addLink('self', `/store/orders/${order._id}`)
+    return formatOutput(res, order, 200, 'order')
+  })
 }
 
-export let getAllOrders = (req: Request, res: Response, next: NextFunction) => {
-  const limit = req.query.limit || orders.length
-  const offset = req.query.offset || 0
-  let filteredOrders = _(orders)
-    .drop(offset)
-    .take(limit)
-    .value()
+export let getAllOrders = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const limit = Number(req.query.limit) || 0
+  const offset = Number(req.query.offset) || 0
+
+  let filteredOrders = await OrderModel.find({}, null, {
+    limit: limit,
+    skip: offset,
+  })
 
   filteredOrders = filteredOrders.map(order => {
-    return halson(order)
-      .addLink('self', `/store/orders/${order.id}`)
+    return halson(order.toJSON())
+      .addLink('self', `/store/orders/${order._id}`)
       .addLink('user', {
         href: `/users/${order.userId}`,
       })
@@ -36,46 +42,53 @@ export let getAllOrders = (req: Request, res: Response, next: NextFunction) => {
   return formatOutput(res, filteredOrders, 200, 'order')
 }
 
-export let addOrder = (req: Request, res: Response, next: NextFunction) => {
-  /* tslint:disable:object-literal-sort-keys */
-  let order: Order = {
-    // generic random value from 1 to 100 only for tests so far
-    id: Math.floor(Math.random() * 100) + 1,
-    userId: req.body.userId,
-    quantity: req.body.quantity,
-    shipDate: req.body.shipDate,
-    status: OrderStatus.Placed,
-    complete: false,
+export let addOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userId = req.body.userId
+
+  const user = await UserModel.findById(userId)
+  if (!user) {
+    return res.status(404).send()
   }
-  /* tslint:enable:object-literal-sort-keys */
-  orders.push(order)
-  order = halson(order)
-    .addLink('self', `/store/orders/${order.id}`)
+
+  const newOrder = new OrderModel(req.body)
+  let order = await newOrder.save()
+
+  order = halson(order.toJSON())
+    .addLink('self', `/store/orders/${order._id}`)
     .addLink('user', {
       href: `/users/${order.userId}`,
     })
   return formatOutput(res, order, 201, 'order')
 }
 
-export let removeOrder = (req: Request, res: Response, next: NextFunction) => {
-  const id = Number(req.params.id)
-  const orderIndex = orders.findIndex(item => item.id === id)
+export let removeOrder = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const id = req.params.id
+  const order = await OrderModel.findById(id)
 
-  if (orderIndex === -1) {
+  if (!order) {
     return res.status(404).send()
   }
 
-  orders = orders.filter(item => item.id !== id)
-
+  await order.remove()
   return res.status(204).send()
 }
 
-export let getInventory = (req: Request, res: Response, next: NextFunction) => {
+export let getInventory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const status = req.query.status
-  let inventoryOrders = orders
-  if (status) {
-    inventoryOrders = inventoryOrders.filter(item => item.status === status)
-  }
-  const grouppedOrders = _.groupBy(inventoryOrders, 'userId')
-  return formatOutput(res, grouppedOrders, 200, 'inventory')
+
+  const orders = await OrderModel.find({ status: status })
+  const groupedOrders = _.groupBy(orders, 'userId')
+  return formatOutput(res, groupedOrders, 200, 'inventory')
 }
