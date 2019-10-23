@@ -39,7 +39,11 @@ describe('userRoute', () => {
   it('should be able to login', () => {
     return chai
       .request(app)
-      .get(`/users/login?username=${user.username}&password=${user.password}`)
+      .post(`/users/login`)
+      .send({
+        username: user.username,
+        password: user.password,
+      })
       .then(res => {
         expect(res.status).to.be.equal(200)
         token = res.body.token

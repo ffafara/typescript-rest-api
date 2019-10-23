@@ -10,7 +10,7 @@ export class UserRoute extends PassportConfiguration {
         passport.authenticate('jwt', { session: false }),
         userController.addUser
       )
-    app.route('/users/login').get(userController.login)
+    app.route('/users/login').post(userController.login)
     app
       .route('/users/:username')
       .patch(

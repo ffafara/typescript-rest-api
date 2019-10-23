@@ -66,8 +66,8 @@ export let removeUser = (req: Request, res: Response, next: NextFunction) => {
 }
 
 export let login = async (req: Request, res: Response, next: NextFunction) => {
-  const username = req.query.username
-  const password = req.query.password
+  const username = req.body.username
+  const password = req.body.password
 
   const user = await UserModel.findOne({ username: username })
   if (!user) {
