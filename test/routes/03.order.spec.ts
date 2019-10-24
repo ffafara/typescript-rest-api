@@ -29,7 +29,7 @@ describe('orderRoute', () => {
     try {
       return await OrderModel.collection.drop()
     } catch (error) {
-      return
+      throw error
     }
   })
 

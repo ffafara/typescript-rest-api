@@ -38,7 +38,7 @@ describe('userRoute', () => {
           done()
         })
       })
-      .catch(error => done())
+      .catch(error => done(error))
   })
 
   it('should be able to login', () => {
