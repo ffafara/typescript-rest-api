@@ -3,13 +3,19 @@ import { NextFunction, Request, Response } from 'express'
 import * as halson from 'halson'
 import * as jwt from 'jsonwebtoken'
 import { UserModel } from '../schemas/user'
+import { Logger } from '../utility/logger'
 import { formatOutput } from '../utility/orderApiUtility'
 
 export let getUser = (req: Request, res: Response, next: NextFunction) => {
   const username = req.params.username
 
+  Logger.logger.info(`[GET] [/users] ${username}`)
+
   UserModel.findOne({ username: username }, (err, user) => {
     if (!user) {
+      Logger.logger.info(
+        `[GET] [/users/:{username}] user with username ${username} not found`
+      )
       return res.status(404).send()
     }
 
@@ -22,10 +28,15 @@ export let getUser = (req: Request, res: Response, next: NextFunction) => {
 
 export let addUser = (req: Request, res: Response, next: NextFunction) => {
   const newUser = new UserModel(req.body)
+
+  Logger.logger.info(`[POST] [/users] ${newUser}`)
   newUser.password = bcrypt.hashSync(newUser.password, 10)
 
   newUser.save((err, user) => {
     if (err) {
+      Logger.logger.info(
+        `[POST] [/users] something went wrong when saving a new user ${newUser.username} | ${err.message}`
+      )
       return res.status(500).send(err)
     }
     user = halson(user.toJSON()).addLink('self', `/users/${user._id}`)
@@ -35,6 +46,8 @@ export let addUser = (req: Request, res: Response, next: NextFunction) => {
 
 export let updateUser = (req: Request, res: Response, next: NextFunction) => {
   const username = req.params.username
+
+  Logger.logger.info(`[PATCH] [/users] ${username}`)
 
   UserModel.findOne({ username: username }, (err, user) => {
     if (!user) {
@@ -57,8 +70,12 @@ export let updateUser = (req: Request, res: Response, next: NextFunction) => {
 
 export let removeUser = (req: Request, res: Response, next: NextFunction) => {
   const username = req.params.username
+  Logger.logger.warn(`[DELETE] [/users] ${username}`)
   UserModel.findOne({ username: username }, (err, user) => {
     if (!user) {
+      Logger.logger.info(
+        `[DELETE] [/users/:{username}] user with username ${username} not found`
+      )
       return res.status(404).send()
     }
 
@@ -74,6 +91,9 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
 
   const user = await UserModel.findOne({ username: username })
   if (!user) {
+    Logger.logger.info(
+      `[POST] [/users/login] nouser found with the username ${username}`
+    )
     return res.status(404).send()
   }
 
@@ -84,6 +104,7 @@ export let login = async (req: Request, res: Response, next: NextFunction) => {
 
     return res.json({ token: token })
   } else {
+    Logger.logger.info(`[GET] [/users/login] user not authorized ${username}`)
     return res.status(401).send()
   }
 }

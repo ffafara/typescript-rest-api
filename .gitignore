@@ -2,3 +2,4 @@ dist/
 reports/
 mongodb/
 .vscode/
+aggregated.log
