@@ -27,7 +27,7 @@ describe('orderRoute', () => {
   before(async () => {
     expect(OrderModel.modelName).to.be.equal('Order')
     try {
-      return await OrderModel.collection.drop()
+      return await OrderModel.remove({})
     } catch (error) {
       throw error
     }

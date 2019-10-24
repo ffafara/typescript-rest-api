@@ -28,8 +28,7 @@ describe('userRoute', () => {
 
   before(done => {
     expect(UserModel.modelName).to.be.equal('User')
-    UserModel.collection
-      .drop()
+    UserModel.remove({})
       .then(() => {
         const newUser = new UserModel(user)
         newUser.password = bcrypt.hashSync(newUser.password, 10)
